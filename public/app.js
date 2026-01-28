@@ -13,7 +13,7 @@ let editorContent = {
 let customTheme = null;
 
 // API URL - works on both local and deployed environments
-const API_URL = window.location.hostname === 'localhost' ? '${API_URL}' : '';
+const API_URL = window.location.hostname === 'localhost' ? `${API_URL}' : '';
 
 // Real-time collaboration variables
 let socket = null;
@@ -87,7 +87,7 @@ async function analyzeWebsite() {
     addMessage('assistant', 'Analyzing website... This may take a moment.');
 
     try {
-        const response = await fetch('${API_URL}/api/analyze', {
+        const response = await fetch(`${API_URL}/api/analyze`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ url })
@@ -263,7 +263,7 @@ async function generateWorkspace() {
     addMessage('assistant', themeMessage);
 
     try {
-        const response = await fetch('${API_URL}/api/generate', {
+        const response = await fetch(`${API_URL}/api/generate`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -456,7 +456,7 @@ async function requestCodeSuggestion() {
     addMessage('assistant', '🤔 Generating code suggestion...');
 
     try {
-        const response = await fetch('${API_URL}/api/suggest', {
+        const response = await fetch(`${API_URL}/api/suggest`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -748,7 +748,7 @@ async function initializeGit() {
     addMessage('assistant', '⏳ Initializing git repository...');
     
     try {
-        const response = await fetch('${API_URL}/api/git/init', {
+        const response = await fetch(`${API_URL}/api/git/init`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
@@ -779,7 +779,7 @@ async function initializeGit() {
 // Make initial commit
 async function makeInitialCommit() {
     try {
-        const response = await fetch('${API_URL}/api/git/commit', {
+        const response = await fetch(`${API_URL}/api/git/commit`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -813,7 +813,7 @@ async function commitChanges() {
     addMessage('assistant', '⏳ Creating commit...');
 
     try {
-        const response = await fetch('${API_URL}/api/git/commit', {
+        const response = await fetch(`${API_URL}/api/git/commit`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -844,7 +844,7 @@ async function getCommitHistory() {
     }
 
     try {
-        const response = await fetch('${API_URL}/api/git/log', {
+        const response = await fetch(`${API_URL}/api/git/log`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -932,7 +932,7 @@ async function getGitStatus() {
     }
 
     try {
-        const response = await fetch('${API_URL}/api/git/status', {
+        const response = await fetch(`${API_URL}/api/git/status`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ workspacePath: currentWorkspacePath })
@@ -1019,7 +1019,7 @@ async function showAnalyticsDashboard() {
     addMessage('assistant', '⏳ Calculating analytics...');
 
     try {
-        const response = await fetch('${API_URL}/api/analytics', {
+        const response = await fetch(`${API_URL}/api/analytics`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
