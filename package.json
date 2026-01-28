@@ -21,6 +21,7 @@
     "cheerio": "^1.0.0-rc.12",
     "cors": "^2.8.5",
     "express": "^4.18.2",
+    "html2canvas": "^1.4.1",
     "jszip": "^3.10.1",
     "openai": "^4.20.0",
     "puppeteer": "^21.6.0",

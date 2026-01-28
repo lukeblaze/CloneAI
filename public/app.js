@@ -121,9 +121,36 @@ async function analyzeWebsite() {
     }
 }
 
+// Capture screenshot of the live preview using html2canvas
+async function capturePreviewScreenshot() {
+    try {
+        const previewContainer = document.getElementById('previewContainer');
+        if (!previewContainer || !previewContainer.innerHTML) {
+            return null;
+        }
+        
+        // Capture the preview iframe or container
+        const canvas = await html2canvas(previewContainer, {
+            backgroundColor: '#ffffff',
+            scale: 1,
+            useCORS: true,
+            allowTaint: true,
+            logging: false
+        });
+        
+        return canvas.toDataURL('image/jpeg', 0.8);
+    } catch (error) {
+        console.warn('Screenshot capture failed:', error);
+        return null;
+    }
+}
+
 // Display analysis results
 function displayAnalysisResults(data) {
     const { structure, screenshot, url } = data;
+    
+    // Store original screenshot or null if not available
+    let displayScreenshot = screenshot;
     
     const resultHTML = `
         <div class="result-card">
@@ -131,7 +158,9 @@ function displayAnalysisResults(data) {
                 <span class="result-title">✅ Analysis Complete</span>
             </div>
             
-            ${screenshot ? `<img src="${screenshot}" alt="Screenshot" class="screenshot-preview">` : '<div class="no-screenshot">📸 Screenshot unavailable (serverless mode)</div>'}
+            <div id="screenshotContainer">
+                ${displayScreenshot ? `<img src="${displayScreenshot}" alt="Screenshot" class="screenshot-preview">` : '<div class="no-screenshot">📸 Capturing screenshot...</div>'}
+            </div>
             
             <div class="stats-grid">
                 <div class="stat-item">
@@ -206,6 +235,26 @@ function displayAnalysisResults(data) {
     `;
     
     addMessage('assistant', resultHTML, true);
+    
+    // Capture screenshot client-side if not already available
+    if (!displayScreenshot) {
+        setTimeout(async () => {
+            const previewIframe = document.getElementById('previewIframe');
+            if (previewIframe && previewIframe.src === url) {
+                try {
+                    const capturedScreenshot = await capturePreviewScreenshot();
+                    if (capturedScreenshot) {
+                        const screenshotContainer = document.getElementById('screenshotContainer');
+                        if (screenshotContainer) {
+                            screenshotContainer.innerHTML = `<img src="${capturedScreenshot}" alt="Screenshot" class="screenshot-preview">`;
+                        }
+                    }
+                } catch (error) {
+                    console.warn('Failed to capture client-side screenshot:', error);
+                }
+            }
+        }, 2000); // Wait for preview to load
+    }
 }
 
 // Show/hide preview panel

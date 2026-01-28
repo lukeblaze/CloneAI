@@ -211,9 +211,11 @@ app.post('/api/analyze', async (req, res) => {
         let styles = '';
 
         // Skip Puppeteer on Vercel (serverless environment) to avoid timeouts
+        // Also skip by default - it's too unreliable on Windows
         const isVercel = process.env.VERCEL === '1';
+        const useFallback = true; // Always use fallback to avoid Puppeteer issues
 
-        if (!isVercel) {
+        if (!isVercel && !useFallback) {
             // Try Puppeteer (works on Render and local)
             try {
                 const browser = await puppeteer.launch({ 
@@ -263,7 +265,11 @@ app.post('/api/analyze', async (req, res) => {
                     console.log('Style extraction failed:', styleError.message);
                 }
 
-                await browser.close();
+                try {
+                    await browser.close();
+                } catch (closeError) {
+                    console.log('Browser close error (ignored):', closeError.message);
+                }
 
             } catch (puppeteerError) {
                 console.log('Puppeteer failed, using fallback:', puppeteerError.message);
@@ -2285,5 +2291,8 @@ server.listen(PORT, () => {
     console.log('📝 Ready to clone entire workspaces!');
     console.log('🤝 Real-time collaboration enabled!');
 });
+
+// Export for Vercel serverless
+module.exports = app;
 
 
