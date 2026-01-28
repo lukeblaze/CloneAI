@@ -25,6 +25,11 @@ app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.static('public'));
 
+// Root route handler
+app.get('/', (req, res) => {
+    res.sendFile(__dirname + '/public/index.html');
+});
+
 // Real-time collaboration sessions
 const collaborationSessions = new Map();
 
