@@ -618,6 +618,11 @@ function openBuilderWizard() {
     document.body.appendChild(modal);
 }
 
+// Ensure builder functions are accessible globally
+window.openBuilderWizard = openBuilderWizard;
+window.handleBuilderContinue = handleBuilderContinue;
+window.packageNodeApp = packageNodeApp;
+
 // Handle builder wizard continue
 function handleBuilderContinue() {
     const platform = document.getElementById('builderPlatformSelect').value;
