@@ -146,11 +146,22 @@
                 </div>
             </div>
             <div class="preview-body">
-                <div class="preview-frame-container" id="previewContainer">
-                    <iframe id="previewIframe" frameborder="0" sandbox="allow-same-origin allow-scripts allow-forms"></iframe>
-                    <div class="preview-loading" id="previewLoading">
-                        <div class="loader"></div>
-                        <p>Loading preview...</p>
+                <div class="preview-comparison">
+                    <div class="preview-frame-container" id="previewContainer">
+                        <div class="preview-label">Original Website</div>
+                        <iframe id="previewIframe" frameborder="0" sandbox="allow-same-origin allow-scripts allow-forms"></iframe>
+                        <div class="preview-loading" id="previewLoading">
+                            <div class="loader"></div>
+                            <p>Loading original...</p>
+                        </div>
+                    </div>
+                    <div class="preview-frame-container" id="clonedPreviewContainer" style="display: none;">
+                        <div class="preview-label">Cloned Website</div>
+                        <iframe id="clonedPreviewIframe" frameborder="0" sandbox="allow-same-origin allow-scripts allow-forms"></iframe>
+                        <div class="preview-loading" id="clonedPreviewLoading" style="display: none;">
+                            <div class="loader"></div>
+                            <p>Loading clone...</p>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -270,14 +270,64 @@ function showPreview(url) {
         previewTitle.textContent = new URL(url).hostname;
         previewLoading.style.display = 'flex';
         
-        // Load iframe
+        // Load original website iframe
         previewIframe.onload = () => {
             previewLoading.style.display = 'none';
+        };
+        
+        // Try to load the original URL, but if it fails due to X-Frame-Options, handle gracefully
+        previewIframe.onerror = () => {
+            previewLoading.style.display = 'none';
+            // Show message that original site blocks iframe loading
         };
         
         previewIframe.src = url;
     } else {
         previewPanel.style.display = 'none';
+    }
+}
+
+// Show cloned preview
+function showClonedPreview() {
+    if (!generatedWorkspace) return;
+    
+    const clonedContainer = document.getElementById('clonedPreviewContainer');
+    const clonedIframe = document.getElementById('clonedPreviewIframe');
+    const clonedLoading = document.getElementById('clonedPreviewLoading');
+    
+    clonedContainer.style.display = 'flex';
+    clonedLoading.style.display = 'flex';
+    
+    // Get the generated files
+    const htmlFile = generatedWorkspace.files.find(f => f.path === 'index.html');
+    const cssFile = generatedWorkspace.files.find(f => f.path === 'style.css' || f.path === 'styles/style.css');
+    const jsFile = generatedWorkspace.files.find(f => f.path === 'script.js' || f.path === 'scripts/script.js');
+    
+    if (htmlFile) {
+        // Create a complete HTML document with CSS and JS embedded
+        let htmlContent = htmlFile.content;
+        
+        // Inject CSS if available
+        if (cssFile) {
+            htmlContent = htmlContent.replace('</head>', `<style>${cssFile.content}</style></head>`);
+        }
+        
+        // Inject JS if available
+        if (jsFile) {
+            htmlContent = htmlContent.replace('</body>', `<script>${jsFile.content}</script></body>`);
+        }
+        
+        // Create a blob URL and load it
+        const blob = new Blob([htmlContent], { type: 'text/html' });
+        const blobUrl = URL.createObjectURL(blob);
+        
+        clonedIframe.onload = () => {
+            clonedLoading.style.display = 'none';
+        };
+        
+        clonedIframe.src = blobUrl;
+    } else {
+        clonedLoading.style.display = 'none';
     }
 }
 
@@ -332,10 +382,65 @@ async function generateWorkspace() {
         }
 
         generatedWorkspace = data.workspace;
+        
+        // Display generated content in preview
+        if (data.workspace.files) {
+            const htmlFile = data.workspace.files.find(f => f.path === 'index.html');
+            const cssFile = data.workspace.files.find(f => f.path === 'style.css');
+            const jsFile = data.workspace.files.find(f => f.path === 'script.js');
+            
+            if (htmlFile) {
+                showGeneratedPreview(htmlFile.content, cssFile?.content || '', jsFile?.content || '');
+            }
+        }
+        
         displayWorkspaceResults(data.workspace);
 
     } catch (error) {
         addMessage('assistant', `Error: ${error.message}`);
+    }
+}
+
+// Display generated preview in iframe
+function showGeneratedPreview(html, css, js) {
+    const previewPanel = document.getElementById('previewPanel');
+    const previewIframe = document.getElementById('previewIframe');
+    const previewTitle = document.getElementById('previewUrlTitle');
+    
+    if (previewPanel && previewIframe) {
+        previewPanel.style.display = 'flex';
+        previewTitle.textContent = 'Generated Preview';
+        
+        // Create a complete HTML document with CSS and JS
+        const fullHtml = `
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Generated Preview</title>
+                <style>
+                    ${css}
+                </style>
+            </head>
+            <body>
+                ${html}
+                <script>
+                    ${js}
+                </script>
+            </body>
+            </html>
+        `;
+        
+        // Create blob URL and load into iframe
+        const blob = new Blob([fullHtml], { type: 'text/html' });
+        const blobUrl = URL.createObjectURL(blob);
+        previewIframe.src = blobUrl;
+        
+        // Clean up blob URL after load
+        previewIframe.onload = () => {
+            console.log('Preview loaded successfully');
+        };
     }
 }
 
@@ -398,6 +503,9 @@ function displayWorkspaceResults(workspace) {
     `;
     
     addMessage('assistant', resultHTML, true);
+    
+    // Automatically show the cloned preview
+    showClonedPreview();
 }
 
 // View file content
