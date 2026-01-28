@@ -290,29 +290,20 @@ function showPreview(url) {
 // Show cloned preview
 function showClonedPreview() {
     if (!generatedWorkspace) return;
-    
     const clonedContainer = document.getElementById('clonedPreviewContainer');
     const clonedIframe = document.getElementById('clonedPreviewIframe');
     const clonedLoading = document.getElementById('clonedPreviewLoading');
-    
     clonedContainer.style.display = 'flex';
     clonedLoading.style.display = 'flex';
-    
     // Get all generated files
     const htmlFile = generatedWorkspace.files.find(f => f.path === 'index.html');
     const cssFiles = generatedWorkspace.files.filter(f => f.path.endsWith('.css'));
     const jsFiles = generatedWorkspace.files.filter(f => f.path.endsWith('.js'));
-    
     if (htmlFile) {
-        // Create a complete HTML document with all CSS and JS embedded
         let htmlContent = htmlFile.content;
-        
-        // Add base tag to handle relative URLs
         if (!htmlContent.includes('<base')) {
             htmlContent = htmlContent.replace('<head>', `<head>\n<base href="${previewUrl || currentAnalysis?.url || ''}">`);
         }
-        
-        // Inject all CSS files
         if (cssFiles.length > 0) {
             let allCss = cssFiles.map(f => f.content).join('\n\n');
             if (htmlContent.includes('</head>')) {
@@ -321,8 +312,6 @@ function showClonedPreview() {
                 htmlContent = `<style>\n${allCss}\n</style>\n` + htmlContent;
             }
         }
-        
-        // Inject all JS files
         if (jsFiles.length > 0) {
             let allJs = jsFiles.map(f => f.content).join('\n\n');
             if (htmlContent.includes('</body>')) {
@@ -331,17 +320,18 @@ function showClonedPreview() {
                 htmlContent += `<script>\n${allJs}\n</script>`;
             }
         }
-        
         // Create a blob URL and load it
         const blob = new Blob([htmlContent], { type: 'text/html' });
         const blobUrl = URL.createObjectURL(blob);
-        
         clonedIframe.onload = () => {
             clonedLoading.style.display = 'none';
         };
-        
         clonedIframe.src = blobUrl;
-        
+        // Make the iframe clickable to open in a new tab
+        clonedIframe.style.cursor = 'pointer';
+        clonedIframe.onclick = () => {
+            window.open(blobUrl, '_blank');
+        };
         // Clean up blob URL after a delay
         setTimeout(() => URL.revokeObjectURL(blobUrl), 30000);
     } else {

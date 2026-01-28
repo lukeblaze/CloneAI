@@ -527,6 +527,10 @@ body {
     border: 1px solid var(--border-color);
 }
 
+#clonedPreviewIframe {
+    cursor: pointer;
+}
+
 .preview-frame-container.desktop {
     width: 100%;
     height: 100%;
