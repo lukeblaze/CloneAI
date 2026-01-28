@@ -13,7 +13,7 @@ let editorContent = {
 let customTheme = null;
 
 // API URL - works on both local and deployed environments
-const API_URL = window.location.hostname === 'localhost' ? `${API_URL}' : '';
+const API_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : '';
 
 // Real-time collaboration variables
 let socket = null;
