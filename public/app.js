@@ -298,23 +298,38 @@ function showClonedPreview() {
     clonedContainer.style.display = 'flex';
     clonedLoading.style.display = 'flex';
     
-    // Get the generated files
+    // Get all generated files
     const htmlFile = generatedWorkspace.files.find(f => f.path === 'index.html');
-    const cssFile = generatedWorkspace.files.find(f => f.path === 'style.css' || f.path === 'styles/style.css');
-    const jsFile = generatedWorkspace.files.find(f => f.path === 'script.js' || f.path === 'scripts/script.js');
+    const cssFiles = generatedWorkspace.files.filter(f => f.path.endsWith('.css'));
+    const jsFiles = generatedWorkspace.files.filter(f => f.path.endsWith('.js'));
     
     if (htmlFile) {
-        // Create a complete HTML document with CSS and JS embedded
+        // Create a complete HTML document with all CSS and JS embedded
         let htmlContent = htmlFile.content;
         
-        // Inject CSS if available
-        if (cssFile) {
-            htmlContent = htmlContent.replace('</head>', `<style>${cssFile.content}</style></head>`);
+        // Add base tag to handle relative URLs
+        if (!htmlContent.includes('<base')) {
+            htmlContent = htmlContent.replace('<head>', `<head>\n<base href="${previewUrl || currentAnalysis?.url || ''}">`);
         }
         
-        // Inject JS if available
-        if (jsFile) {
-            htmlContent = htmlContent.replace('</body>', `<script>${jsFile.content}</script></body>`);
+        // Inject all CSS files
+        if (cssFiles.length > 0) {
+            let allCss = cssFiles.map(f => f.content).join('\n\n');
+            if (htmlContent.includes('</head>')) {
+                htmlContent = htmlContent.replace('</head>', `<style>\n${allCss}\n</style>\n</head>`);
+            } else {
+                htmlContent = `<style>\n${allCss}\n</style>\n` + htmlContent;
+            }
+        }
+        
+        // Inject all JS files
+        if (jsFiles.length > 0) {
+            let allJs = jsFiles.map(f => f.content).join('\n\n');
+            if (htmlContent.includes('</body>')) {
+                htmlContent = htmlContent.replace('</body>', `<script>\n${allJs}\n</script>\n</body>`);
+            } else {
+                htmlContent += `<script>\n${allJs}\n</script>`;
+            }
         }
         
         // Create a blob URL and load it
@@ -326,6 +341,9 @@ function showClonedPreview() {
         };
         
         clonedIframe.src = blobUrl;
+        
+        // Clean up blob URL after a delay
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 30000);
     } else {
         clonedLoading.style.display = 'none';
     }
