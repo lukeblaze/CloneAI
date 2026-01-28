@@ -4,28 +4,16 @@
     {
       "src": "server.js",
       "use": "@vercel/node"
-    },
-    {
-      "src": "public/**",
-      "use": "@vercel/static"
     }
   ],
   "routes": [
     {
-      "src": "/socket.io/(.*)",
-      "dest": "/server.js"
-    },
-    {
       "src": "/api/(.*)",
-      "dest": "/server.js"
-    },
-    {
-      "src": "/(.*\\.(css|js|html|png|jpg|jpeg|gif|svg|ico))",
-      "dest": "/public/$1"
+      "dest": "server.js"
     },
     {
       "src": "/(.*)",
-      "dest": "/public/index.html"
+      "dest": "server.js"
     }
   ],
   "env": {
