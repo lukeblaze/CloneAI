@@ -542,18 +542,14 @@ function displayWorkspaceResults(workspace) {
             <div class="result-header">
                 <span class="result-title">✅ Workspace Generated</span>
             </div>
-            
             <p style="margin-bottom: 1rem; color: var(--text-secondary);">
                 Created ${workspace.files.length} files with proper folder structure
             </p>
-            
             ${treeHTML}
-            
             <div class="code-preview" id="filePreview" style="display: none;">
                 <pre><code id="filePreviewCode"></code></pre>
             </div>
-            
-            <div class="result-actions" style="margin-top: 1.5rem;">
+            <div class="result-actions" style="margin-top: 1.5rem; display: flex; gap: 1rem; flex-wrap: wrap;">
                 <button class="action-btn primary" onclick="showEditor()">
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                         <path d="M2 12L12 2L14 4L4 14H2V12Z" stroke="currentColor" stroke-width="1.5"/>
@@ -564,16 +560,121 @@ function displayWorkspaceResults(workspace) {
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                         <path d="M8 2V12M8 12L4 8M8 12L12 8M2 14H14" stroke="currentColor" stroke-width="1.5"/>
                     </svg>
-                    Download ZIP
+                    Download Website
+                </button>
+                <button class="action-btn" onclick="downloadAppPackage()">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/>
+                        <path d="M8 5V11M5 8H11" stroke="currentColor" stroke-width="1.5"/>
+                    </svg>
+                    Download App
+                </button>
+                <button class="action-btn" onclick="openBuilderWizard()">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/>
+                        <path d="M8 4V8L11 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                    Build App/Website
                 </button>
             </div>
         </div>
     `;
-    
     addMessage('assistant', resultHTML, true);
-    
     // Automatically show the cloned preview
     showClonedPreview();
+}
+
+// Open builder wizard modal
+function openBuilderWizard() {
+    if (document.getElementById('builderWizardModal')) return;
+    const modal = document.createElement('div');
+    modal.id = 'builderWizardModal';
+    modal.style.position = 'fixed';
+    modal.style.top = '0';
+    modal.style.left = '0';
+    modal.style.width = '100vw';
+    modal.style.height = '100vh';
+    modal.style.background = 'rgba(0,0,0,0.5)';
+    modal.style.display = 'flex';
+    modal.style.alignItems = 'center';
+    modal.style.justifyContent = 'center';
+    modal.style.zIndex = '9999';
+    modal.innerHTML = `
+        <div style="background: #18181b; color: #fff; border-radius: 16px; padding: 2rem 2.5rem; min-width: 340px; max-width: 95vw; box-shadow: 0 8px 32px rgba(0,0,0,0.25); position: relative;">
+            <button onclick="document.getElementById('builderWizardModal').remove()" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">&times;</button>
+            <h2 style="margin-bottom: 1.5rem;">Build App/Website</h2>
+            <div style="margin-bottom: 1.5rem;">
+                <label style="font-weight: 500;">Choose Platform:</label><br>
+                <select id="builderPlatformSelect" style="margin-top: 0.5rem; padding: 0.5rem 1rem; border-radius: 6px; border: 1px solid #333; background: #222; color: #fff; width: 100%;">
+                    <option value="web">Static Website</option>
+                    <option value="node">Node.js App</option>
+                    <option value="pwa">Progressive Web App (PWA)</option>
+                    <option value="mobile">Mobile App (Cordova/PWA)</option>
+                </select>
+            </div>
+            <button class="action-btn primary" style="width: 100%;" onclick="handleBuilderContinue()">Continue</button>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+// Handle builder wizard continue
+function handleBuilderContinue() {
+    const platform = document.getElementById('builderPlatformSelect').value;
+    if (platform === 'node') {
+        packageNodeApp();
+    } else {
+        alert('Only Node.js App packaging is implemented in this demo.');
+    }
+}
+}
+}
+
+// Download as Node.js/Express app package
+function downloadAppPackage() {
+    if (!generatedWorkspace) return;
+    // Prepare minimal Node.js/Express app structure
+    const files = generatedWorkspace.files;
+    const appFiles = [];
+    // Add package.json
+    appFiles.push({
+        path: 'package.json',
+        content: JSON.stringify({
+            name: 'cloned-app',
+            version: '1.0.0',
+            main: 'server.js',
+            scripts: { start: 'node server.js' },
+            dependencies: { express: '^4.18.2' }
+        }, null, 2)
+    });
+    // Add server.js
+    appFiles.push({
+        path: 'server.js',
+        content: `const express = require('express');\nconst path = require('path');\nconst app = express();\napp.use(express.static(path.join(__dirname, 'public')));\napp.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));\nconst PORT = process.env.PORT || 3000;\napp.listen(PORT, () => console.log('Server running on port', PORT));`
+    });
+    // Add all static files to public/
+    files.forEach(f => {
+        appFiles.push({
+            path: 'public/' + f.path,
+            content: f.content
+        });
+    });
+    // Use JSZip to create ZIP
+    const zip = new JSZip();
+    appFiles.forEach(f => zip.file(f.path, f.content));
+    zip.generateAsync({ type: 'blob' }).then(blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'cloned-node-app.zip';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+        // Close modal
+        const modal = document.getElementById('builderWizardModal');
+        if (modal) modal.remove();
+    });
 }
 
 // View file content
@@ -2547,8 +2648,6 @@ function showPerformanceAnalysis() {
     
     const structure = currentAnalysis.structure;
     const assets = structure.assets || {};
-    
-    // Calculate metrics
     
     // Calculate metrics
     const totalImages = assets.images?.length || 0;
