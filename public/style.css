@@ -1,3 +1,17 @@
+/* Home button for preview */
+.preview-home-btn {
+    background: none;
+    border: none;
+    margin-left: 1rem;
+    cursor: pointer;
+    color: var(--primary);
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    transition: background 0.2s;
+}
+.preview-home-btn:hover {
+    background: var(--bg-tertiary);
+}
 /* Reset & Variables */
 * {
     margin: 0;

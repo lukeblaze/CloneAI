@@ -1,3 +1,17 @@
+// Go Home (show welcome screen)
+function goHome() {
+    // Hide preview panel
+    document.getElementById('previewPanel').style.display = 'none';
+    // Show welcome screen if it exists
+    const chatMessages = document.getElementById('chatMessages');
+    if (chatMessages && !document.getElementById('welcomeScreen')) {
+        const welcome = document.createElement('div');
+        welcome.className = 'welcome-screen';
+        welcome.id = 'welcomeScreen';
+        welcome.innerHTML = `<div class="welcome-content"><h1>Clone Any Website</h1><p>Enter a URL and I'll analyze its structure, design, and create a complete workspace for you</p><div class="feature-cards"><div class="feature-card"><div class="feature-icon">🎨</div><h3>Full Design Analysis</h3><p>Colors, fonts, layout structure</p></div><div class="feature-card"><div class="feature-icon">📁</div><h3>Complete Workspace</h3><p>HTML, CSS, JS with proper folders</p></div><div class="feature-card"><div class="feature-icon">⚡</div><h3>Production Ready</h3><p>Clean, organized, deployable code</p></div></div></div>`;
+        chatMessages.prepend(welcome);
+    }
+}
 let currentAnalysis = null;
 let generatedWorkspace = null;
 let history = [];
