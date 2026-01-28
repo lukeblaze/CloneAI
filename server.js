@@ -199,35 +199,35 @@ app.post('/api/analyze', async (req, res) => {
 
         console.log(`Analyzing: ${url}`);
 
-        // Launch headless browser with proper arguments
-        const browser = await puppeteer.launch({ 
-            headless: 'new',
-            args: [
-                '--no-sandbox',
-                '--disable-setuid-sandbox',
-                '--disable-web-security',
-                '--disable-features=IsolateOrigins,site-per-process'
-            ]
-        });
-        const page = await browser.newPage();
-        
-        // Set a reasonable user agent
-        await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
-        
-        // Navigate with longer timeout and less strict wait condition
-        await page.goto(url, { 
-            waitUntil: 'domcontentloaded', 
-            timeout: 60000 
-        });
+        let html, screenshot = null;
+        let styles = { inline: '', external: [] };
 
-        // Get page content
-        const html = await page.content();
-        const screenshot = await page.screenshot({ encoding: 'base64', fullPage: false });
+        // Try Puppeteer first, fallback to simple fetch if it fails (for serverless environments)
+        try {
+            const browser = await puppeteer.launch({ 
+                headless: 'new',
+                args: [
+                    '--no-sandbox',
+                    '--disable-setuid-sandbox',
+                    '--disable-web-security',
+                    '--disable-features=IsolateOrigins,site-per-process'
+                ]
+            });
+            const page = await browser.newPage();
+            
+            await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+            
+            await page.goto(url, { 
+                waitUntil: 'domcontentloaded', 
+                timeout: 30000 
+            });
 
-        // Extract styles
-        const styles = await page.evaluate(() => {
-            const styleSheets = Array.from(document.styleSheets);
-            let css = '';
+            html = await page.content();
+            screenshot = await page.screenshot({ encoding: 'base64', fullPage: false });
+
+            styles = await page.evaluate(() => {
+                const styleSheets = Array.from(document.styleSheets);
+                let css = '';
             styleSheets.forEach(sheet => {
                 try {
                     const rules = Array.from(sheet.cssRules || sheet.rules);
@@ -242,6 +242,24 @@ app.post('/api/analyze', async (req, res) => {
         });
 
         await browser.close();
+
+        } catch (puppeteerError) {
+            console.log('Puppeteer failed, using fallback fetch method:', puppeteerError.message);
+            
+            // Fallback to simple axios fetch (works on serverless)
+            const response = await axios.get(url, {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                },
+                timeout: 10000
+            });
+            html = response.data;
+            screenshot = null; // No screenshot in fallback mode
+            
+            // Extract inline styles from HTML
+            const $ = cheerio.load(html);
+            styles = $('style').text();
+        }
 
         // Parse HTML
         const $ = cheerio.load(html);
