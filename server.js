@@ -202,81 +202,85 @@ app.post('/api/analyze', async (req, res) => {
         let html, screenshot = null;
         let styles = '';
 
-        // Try Puppeteer first, fallback to simple fetch if it fails (for serverless environments)
-        try {
-            const browser = await puppeteer.launch({ 
-                headless: 'new',
-                args: [
-                    '--no-sandbox',
-                    '--disable-setuid-sandbox',
-                    '--disable-web-security',
-                    '--disable-features=IsolateOrigins,site-per-process'
-                ],
-                timeout: 10000
-            });
-            const page = await browser.newPage();
-            
-            await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
-            
-            await page.goto(url, { 
-                waitUntil: 'domcontentloaded', 
-                timeout: 15000 
-            });
+        // Skip Puppeteer on Vercel (serverless environment) to avoid timeouts
+        const isVercel = process.env.VERCEL === '1';
 
-            html = await page.content();
-            
+        if (!isVercel) {
+            // Try Puppeteer (works on Render and local)
             try {
-                screenshot = await page.screenshot({ encoding: 'base64', fullPage: false });
-            } catch (screenshotError) {
-                console.log('Screenshot failed:', screenshotError.message);
-            }
-
-            try {
-                styles = await page.evaluate(() => {
-                    const styleSheets = Array.from(document.styleSheets);
-                    let css = '';
-                    styleSheets.forEach(sheet => {
-                        try {
-                            const rules = Array.from(sheet.cssRules || sheet.rules);
-                            rules.forEach(rule => {
-                                css += rule.cssText + '\n';
-                            });
-                        } catch (e) {
-                            // Cross-origin stylesheet
-                        }
-                    });
-                    return css;
+                const browser = await puppeteer.launch({ 
+                    headless: 'new',
+                    args: [
+                        '--no-sandbox',
+                        '--disable-setuid-sandbox',
+                        '--disable-web-security',
+                        '--disable-features=IsolateOrigins,site-per-process'
+                    ],
+                    timeout: 10000
                 });
-            } catch (styleError) {
-                console.log('Style extraction failed:', styleError.message);
-            }
-
-            await browser.close();
-
-        } catch (puppeteerError) {
-            console.log('Puppeteer failed, using fallback fetch method:', puppeteerError.message);
-            
-            try {
-                // Fallback to simple axios fetch (works on serverless)
-                const response = await axios.get(url, {
-                    headers: {
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-                    },
-                    timeout: 8000,
-                    maxRedirects: 5
-                });
-                html = response.data;
-                screenshot = null;
+                const page = await browser.newPage();
                 
-                // Extract inline styles from HTML
-                const $ = cheerio.load(html);
-                $('style').each((i, el) => {
-                    styles += $(el).html() + '\n';
+                await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+                
+                await page.goto(url, { 
+                    waitUntil: 'domcontentloaded', 
+                    timeout: 15000 
                 });
-            } catch (fetchError) {
-                console.error('Fallback fetch also failed:', fetchError.message);
-                throw new Error('Unable to fetch website content. Please check the URL and try again.');
+
+                html = await page.content();
+                
+                try {
+                    screenshot = await page.screenshot({ encoding: 'base64', fullPage: false });
+                } catch (screenshotError) {
+                    console.log('Screenshot failed:', screenshotError.message);
+                }
+
+                try {
+                    styles = await page.evaluate(() => {
+                        const styleSheets = Array.from(document.styleSheets);
+                        let css = '';
+                        styleSheets.forEach(sheet => {
+                            try {
+                                const rules = Array.from(sheet.cssRules || sheet.rules);
+                                rules.forEach(rule => {
+                                    css += rule.cssText + '\n';
+                                });
+                            } catch (e) {
+                                // Cross-origin stylesheet
+                            }
+                        });
+                        return css;
+                    });
+                } catch (styleError) {
+                    console.log('Style extraction failed:', styleError.message);
+                }
+
+                await browser.close();
+
+            } catch (puppeteerError) {
+                console.log('Puppeteer failed, using fallback:', puppeteerError.message);
+                html = null; // Will trigger fallback below
             }
+        }
+
+        // Fallback fetch method (used on Vercel or if Puppeteer fails)
+        if (!html) {
+            console.log('Using fallback fetch method');
+            const response = await axios.get(url, {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                },
+                timeout: 8000,
+                maxRedirects: 5
+            });
+            html = response.data;
+            screenshot = null;
+            
+            // Extract inline styles from HTML
+            const $ = cheerio.load(html);
+            $('style').each((i, el) => {
+                styles += $(el).html() + '\n';
+            });
         }
 
         // Parse HTML
