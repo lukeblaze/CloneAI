@@ -289,7 +289,7 @@ app.post('/api/analyze', async (req, res) => {
         res.json({
             success: true,
             url,
-            screenshot: `data:image/png;base64,${screenshot}`,
+            screenshot: screenshot ? `data:image/png;base64,${screenshot}` : null,
             structure,
             fullHtml: html,
             fullCss: styles

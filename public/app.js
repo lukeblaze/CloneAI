@@ -128,7 +128,7 @@ function displayAnalysisResults(data) {
                 <span class="result-title">✅ Analysis Complete</span>
             </div>
             
-            <img src="${screenshot}" alt="Screenshot" class="screenshot-preview">
+            ${screenshot ? `<img src="${screenshot}" alt="Screenshot" class="screenshot-preview">` : '<div class="no-screenshot">📸 Screenshot unavailable (serverless mode)</div>'}
             
             <div class="stats-grid">
                 <div class="stat-item">
