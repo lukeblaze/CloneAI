@@ -1,3 +1,47 @@
+// Store recent previews
+let recentPreviews = [];
+
+function addRecentPreview(type, url, label, blobUrl) {
+    // Prevent duplicates
+    if (recentPreviews.some(p => p.url === url && p.type === type)) return;
+    recentPreviews.unshift({ type, url, label, blobUrl });
+    if (recentPreviews.length > 10) recentPreviews.pop();
+    renderRecentPreviews();
+}
+
+function renderRecentPreviews() {
+    const list = document.getElementById('recentPreviewsList');
+    if (!list) return;
+    list.innerHTML = '';
+    if (recentPreviews.length === 0) {
+        list.innerHTML = '<div class="empty-state">No previews yet</div>';
+        return;
+    }
+    recentPreviews.forEach((preview, idx) => {
+        const div = document.createElement('div');
+        div.className = 'recent-preview-item';
+        div.innerHTML = `<span class="recent-preview-title">${preview.label}</span><button class="recent-preview-close" title="Remove" onclick="removeRecentPreview(${idx}, event)">&times;</button>`;
+        div.onclick = (e) => {
+            if (e.target.classList.contains('recent-preview-close')) return;
+            openRecentPreview(preview);
+        };
+        list.appendChild(div);
+    });
+}
+
+function removeRecentPreview(idx, event) {
+    event.stopPropagation();
+    recentPreviews.splice(idx, 1);
+    renderRecentPreviews();
+}
+
+function openRecentPreview(preview) {
+    if (preview.type === 'cloned') {
+        showClonedPreview(preview.blobUrl);
+    } else {
+        showPreview(preview.url);
+    }
+}
 // Go Home (show welcome screen)
 function goHome() {
     // Hide preview panel
@@ -274,6 +318,7 @@ function displayAnalysisResults(data) {
 // Show/hide preview panel
 function showPreview(url) {
     previewUrl = url;
+    addRecentPreview('original', url, `Original: ${new URL(url).hostname}`);
     const previewPanel = document.getElementById('previewPanel');
     const previewIframe = document.getElementById('previewIframe');
     const previewLoading = document.getElementById('previewLoading');
@@ -337,6 +382,7 @@ function showClonedPreview() {
         // Create a blob URL and load it
         const blob = new Blob([htmlContent], { type: 'text/html' });
         const blobUrl = URL.createObjectURL(blob);
+        addRecentPreview('cloned', blobUrl, `Cloned: ${currentAnalysis?.url || previewUrl}`, blobUrl);
         clonedIframe.onload = () => {
             clonedLoading.style.display = 'none';
         };

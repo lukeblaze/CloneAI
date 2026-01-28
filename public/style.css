@@ -1,3 +1,46 @@
+/* Recent Previews sidebar */
+#recentPreviewsList {
+    margin-top: 0.5rem;
+}
+.recent-preview-item {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    margin-bottom: 0.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: background 0.2s;
+}
+.recent-preview-item:hover {
+    background: var(--primary);
+    color: #fff;
+}
+.recent-preview-title {
+    font-size: 0.95rem;
+    font-weight: 500;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.recent-preview-close {
+    background: none;
+    border: none;
+    color: var(--error);
+    font-size: 1.1rem;
+    margin-left: 0.5rem;
+    cursor: pointer;
+    padding: 0 0.25rem;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+.recent-preview-close:hover {
+    background: var(--bg-primary);
+}
 /* Home button for preview */
 .preview-home-btn {
     background: none;
