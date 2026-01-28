@@ -618,11 +618,6 @@ function openBuilderWizard() {
     document.body.appendChild(modal);
 }
 
-// Ensure builder functions are accessible globally
-window.openBuilderWizard = openBuilderWizard;
-window.handleBuilderContinue = handleBuilderContinue;
-window.packageNodeApp = packageNodeApp;
-
 // Handle builder wizard continue
 function handleBuilderContinue() {
     const platform = document.getElementById('builderPlatformSelect').value;
@@ -632,8 +627,11 @@ function handleBuilderContinue() {
         alert('Only Node.js App packaging is implemented in this demo.');
     }
 }
-}
-}
+
+// Ensure builder functions are accessible globally
+window.openBuilderWizard = openBuilderWizard;
+window.handleBuilderContinue = handleBuilderContinue;
+window.packageNodeApp = packageNodeApp;
 
 // Download as Node.js/Express app package
 function downloadAppPackage() {
